@@ -55,9 +55,8 @@ public class App {
     public static void main(String[] args) {
         App app = new App();
 
-        // app.populateCustomer();
-        // app.populateOrders();
-        // app.deleteAllItems();
+        app.populateCustomer();
+        app.populateOrders();
 
         // app.deleteAllItems();
 
@@ -67,7 +66,7 @@ public class App {
         Map<String, AttributeValue> customerDdbJson = app.getCustomerByIdDynamoDbJson(CUSTOMER_ID);
         System.out.println("Customer as DynamoDB JSON:" + customerDdbJson);
 
-        CustomerItemCollection customerItemCollection = app.getCustomerItemCollection(CUSTOMER_ID);
+        CustomerItemCollection customerItemCollection = app.getCustomerAndRecentOrders(CUSTOMER_ID, 1);
         System.out.println("Result of query item collection: " + customerItemCollection);
     }
 
@@ -95,16 +94,25 @@ public class App {
         insertOrder(order3);
     }
 
-    CustomerItemCollection getCustomerItemCollection(String customerId) {
+    CustomerItemCollection getCustomerAndRecentOrders(String customerId,
+                                                      int newestOrdersCount) {
         AttributeValue customerPk = AttributeValue.builder().s(Customer.prefixedId(customerId)).build();
         var queryRequest = QueryRequest.builder()
                 .tableName(TABLE_NAME)
-                .keyConditionExpression("#pk = :pk") // Define aliases for the Attribute, '#pk' and the value, ':pk'
-                .expressionAttributeNames(Map.of("#pk", "PK")) // '#pk' refers to the Attribute 'PK'
-                .expressionAttributeValues(Map.of(":pk", customerPk)) // ':pk' refers to the customer PK of interest
+                // Define aliases for the Attribute, '#pk' and the value, ':pk'
+                .keyConditionExpression("#pk = :pk")
+                // '#pk' refers to the Attribute 'PK'
+                .expressionAttributeNames(Map.of("#pk", "PK"))
+                // ':pk' refers to the customer PK of interest
+                .expressionAttributeValues(Map.of(":pk", customerPk))
+                // Search from "bottom to top"
+                .scanIndexForward(false)
+                // One customer, plus N newest orders
+                .limit(1 + newestOrdersCount)
                 .build();
 
-        // Use the DynamoDbClient directly rather than the DynamoDbEnhancedClient or DynamoDbTable
+        // Use the DynamoDbClient directly rather than the
+        // DynamoDbEnhancedClient or DynamoDbTable
         QueryResponse queryResponse = dynamoDbClient.query(queryRequest);
 
         // The result is a list of items in DynamoDB JSON format
@@ -121,14 +129,17 @@ public class App {
                 throw new DynamoDbInvalidEntityException("Required attribute 'Type' is missing or empty on Item with attributes: " + item);
             }
 
-            // Switch on the 'Type' and use the respective TableSchema to marshall the DynamoDB JSON into the value class
+            // Switch on the 'Type' and use the respective TableSchema
+            // to marshall the DynamoDB JSON into the value class
             switch (type.s()) {
                 case Customer.CUSTOMER_TYPE:
-                    Customer customer = customerTableSchema.mapToItem(item);
+                    Customer customer =
+                            customerTableSchema.mapToItem(item);
                     customerItemCollection.setCustomer(customer);
                     break;
                 case Order.ORDER_TYPE:
-                    Order order = orderTableSchema.mapToItem(item);
+                    Order order =
+                            orderTableSchema.mapToItem(item);
                     customerItemCollection.addOrder(order);
                     break;
                 default:
