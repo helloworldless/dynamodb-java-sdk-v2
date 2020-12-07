@@ -9,7 +9,7 @@ public class CustomerItemCollection {
     private List<Order> orders = new ArrayList<>();
 
     public Customer getCustomer() {
-        return customer;
+        return this.customer;
     }
 
     public void setCustomer(Customer customer) {
@@ -17,7 +17,7 @@ public class CustomerItemCollection {
     }
 
     public List<Order> getOrders() {
-        return orders;
+        return this.orders;
     }
 
     public void addOrder(Order order) {
