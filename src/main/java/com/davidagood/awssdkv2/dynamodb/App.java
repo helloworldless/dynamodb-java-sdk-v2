@@ -40,7 +40,6 @@ public class App {
 
     public App() {
         this.dynamoDbClient = DynamoDbClient.builder()
-                .region(Region.US_EAST_1)
                 .build();
         this.dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
