@@ -52,6 +52,10 @@ public class Customer {
     // Do nothing, this is a derived attribute
     // Note that without the setter, the attribute will silently not be persisted by the Enhanced Client
     public void setType(String type) {
+        if (!CUSTOMER_TYPE.equals(type)) {
+            // This can happen when performing a Scan on a table of heterogeneous items
+            throw new IllegalArgumentException("Attempted marshall into Customer an item of Type=" + type);
+        }
     }
 
     @Override

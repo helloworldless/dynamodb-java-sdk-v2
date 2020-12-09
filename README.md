@@ -27,8 +27,11 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 - Build table schema manually, i.e. without annotations
   - See [here](https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#initialization)
 - Create table programmatically
-- Versioned attribute
-- Conditional `PutItem` if item does not already exist
-  - Already exists, just use it/show how to use it: com.davidagood.awssdkv2.dynamodb.App.insertCustomerDoNotOverwrite
+- Versioned attribute, https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#versionedrecordextension
+- Immutable value classes using `@DynamoDbImmutable`
 - Integration testing with DynamoDBLocal
+  - Test/demo features such as:
+    - DynamoDbTable scan without filtering on type should fail when entity is marshalled, for example see Delivery#setType
+    - PutItem fails if item already exists, see com.davidagood.awssdkv2.dynamodb.App.insertCustomerDoNotOverwrite
 - Running DynamoDB locally via LocalStack
+- Versioning strategy shown here: https://youtu.be/HaEPXoXVf2k?t=2294
