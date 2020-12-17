@@ -35,3 +35,4 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
     - PutItem fails if item already exists, see com.davidagood.awssdkv2.dynamodb.App.insertCustomerDoNotOverwrite
 - Running DynamoDB locally via LocalStack
 - Versioning strategy shown here: https://youtu.be/HaEPXoXVf2k?t=2294
+- Pagination example
