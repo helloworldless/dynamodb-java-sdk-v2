@@ -2,6 +2,8 @@ package com.davidagood.awssdkv2.dynamodb;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
+import java.util.Objects;
+
 @DynamoDbBean
 public class Customer {
 
@@ -11,6 +13,19 @@ public class Customer {
 
     public static String prefixedId(String id) {
         return CUSTOMER_PREFIX + id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Customer customer = (Customer) o;
+        return id.equals(customer.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     private String id;
@@ -30,8 +45,8 @@ public class Customer {
         return prefixedId(this.id);
     }
 
-    // Do nothing, this is a derived attribute
     public void setPartitionKey(String partitionKey) {
+        // Do nothing, this is a derived attribute
     }
 
     @DynamoDbSortKey
@@ -40,8 +55,8 @@ public class Customer {
         return A_RECORD;
     }
 
-    // Do nothing, this is a derived attribute
     public void setSortKey(String sortKey) {
+        // Do nothing, this is a derived attribute
     }
 
     @DynamoDbAttribute("Type")
