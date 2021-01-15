@@ -1,6 +1,8 @@
-package com.davidagood.awssdkv2.dynamodb;
+package com.davidagood.awssdkv2.dynamodb.repository;
 
 
+import com.davidagood.awssdkv2.dynamodb.Customer;
+import com.davidagood.awssdkv2.dynamodb.LocalDynamoDbSyncTestBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
 
-    Repository repository = new Repository(getDynamoDbClient(), getConcreteTableName(TABLE_NAME));
+    Repository repository = new DynamoDbRepository(getDynamoDbClient(), getConcreteTableName(TABLE_NAME));
 
     @BeforeEach
     void createTable() {
@@ -29,8 +31,7 @@ class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
     @Test
     void insertAndRetrieveCustomer() {
         var customerId = CUSTOMER_ID;
-        Customer customer = new Customer();
-        customer.setId(customerId);
+        Customer customer = new Customer(customerId);
         repository.insertCustomer(customer);
         assertThat(repository.getCustomerById(customerId)).isEqualTo(customer);
     }

@@ -1,5 +1,6 @@
 package com.davidagood.awssdkv2.dynamodb;
 
+import com.davidagood.awssdkv2.dynamodb.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -9,11 +10,9 @@ import java.util.Map;
 
 public class App {
 
-    private static final Logger log = LoggerFactory.getLogger(App.class);
-
     public static final String CUSTOMER_ID = "123";
     public static final String TABLE_NAME = "java-sdk-v2";
-
+    private static final Logger log = LoggerFactory.getLogger(App.class);
     private final Repository repository;
 
     public App(Repository repository) {
@@ -22,15 +21,15 @@ public class App {
 
     public static void main(String[] args) {
         var dynamoDbClient = DynamoDbClient.builder().build();
-        Repository repository = new Repository(dynamoDbClient, TABLE_NAME);
+        Repository repository = Repository.Factory.create(dynamoDbClient, TABLE_NAME);
         new App(repository).run();
     }
 
     public void run() {
         // this.repository.deleteAllItems();
 
-        // this.populateCustomer();
-        // this.populateOrders();
+        this.populateCustomer();
+        this.populateOrders();
 
         // Retrieve customer and orders
         Customer retrievedCustomer = repository.getCustomerById(CUSTOMER_ID);
@@ -39,32 +38,19 @@ public class App {
         Map<String, AttributeValue> customerDdbJson = repository.getCustomerByIdDynamoDbJson(CUSTOMER_ID);
         log.info("Customer as DynamoDB JSON: {}", customerDdbJson);
 
-        CustomerItemCollection customerItemCollection = repository.getCustomerAndRecentOrders(CUSTOMER_ID, 1);
-        log.info("Result of query item collection: {}", customerItemCollection);
+        CustomerWithOrders customerWithOrders = repository.getCustomerAndRecentOrders(CUSTOMER_ID, 1);
+        log.info("Result of query item collection: {}", customerWithOrders);
     }
 
     public void populateCustomer() {
-        Customer customer = new Customer();
-        customer.setId(CUSTOMER_ID);
+        Customer customer = new Customer(CUSTOMER_ID);
         this.repository.insertCustomer(customer);
     }
 
     public void populateOrders() {
-        Order order = new Order();
-        order.setId("2020-11-25");
-        order.setCustomerId(CUSTOMER_ID);
-
-        Order order2 = new Order();
-        order2.setId("2020-12-01");
-        order2.setCustomerId(CUSTOMER_ID);
-
-        Order order3 = new Order();
-        order3.setId("2020-12-06");
-        order3.setCustomerId(CUSTOMER_ID);
-
-        this.repository.insertOrder(order);
-        this.repository.insertOrder(order2);
-        this.repository.insertOrder(order3);
+        this.repository.insertOrder(new Order("2020-11-25", CUSTOMER_ID));
+        this.repository.insertOrder(new Order("2020-12-01", CUSTOMER_ID));
+        this.repository.insertOrder(new Order("2020-12-06", CUSTOMER_ID));
     }
 
 }

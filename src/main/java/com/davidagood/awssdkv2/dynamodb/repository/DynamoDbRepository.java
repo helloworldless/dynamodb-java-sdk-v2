@@ -1,5 +1,10 @@
-package com.davidagood.awssdkv2.dynamodb;
+package com.davidagood.awssdkv2.dynamodb.repository;
 
+import com.davidagood.awssdkv2.dynamodb.Customer;
+import com.davidagood.awssdkv2.dynamodb.CustomerWithOrders;
+import com.davidagood.awssdkv2.dynamodb.DynamoDbEntityAlreadyExistsException;
+import com.davidagood.awssdkv2.dynamodb.DynamoDbInvalidEntityException;
+import com.davidagood.awssdkv2.dynamodb.Order;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,47 +26,52 @@ import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.isNull;
 
-public class Repository {
+class DynamoDbRepository implements Repository {
 
-    private static final Logger log = LoggerFactory.getLogger(Repository.class);
+    private static final Logger log = LoggerFactory.getLogger(DynamoDbRepository.class);
 
     private final DynamoDbClient dynamoDbClient;
     private final String tableName;
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
+    private final DynamoDbItemMapper mapper = DynamoDbItemMapper.INSTANCE;
 
-    private final TableSchema<Customer> customerTableSchema;
+    private final TableSchema<CustomerItem> customerTableSchema;
 
+    @Override
     @VisibleForTesting
-    DynamoDbTable<Customer> getCustomerTable() {
+    public DynamoDbTable<CustomerItem> getCustomerTable() {
         return customerTable;
     }
 
-    private final DynamoDbTable<Customer> customerTable;
+    private final DynamoDbTable<CustomerItem> customerTable;
 
-    private final TableSchema<Order> orderTableSchema;
-    private final DynamoDbTable<Order> orderTable;
+    private final TableSchema<OrderItem> orderTableSchema;
+    private final DynamoDbTable<OrderItem> orderTable;
 
-    public Repository(DynamoDbClient dynamoDbClient, String tableName) {
+    DynamoDbRepository(DynamoDbClient dynamoDbClient, String tableName) {
         this.dynamoDbClient = dynamoDbClient;
         this.tableName = tableName;
         this.dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
                 .build();
-        this.customerTableSchema = TableSchema.fromClass(Customer.class);
+
+        this.customerTableSchema = TableSchema.fromClass(CustomerItem.class);
         this.customerTable = dynamoDbEnhancedClient.table(tableName, customerTableSchema);
 
-        this.orderTableSchema = TableSchema.fromClass(Order.class);
+        this.orderTableSchema = TableSchema.fromClass(OrderItem.class);
         this.orderTable = dynamoDbEnhancedClient.table(tableName, orderTableSchema);
     }
 
-    public CustomerItemCollection getCustomerAndRecentOrders(String customerId,
-                                                             int newestOrdersCount) {
-        AttributeValue customerPk = AttributeValue.builder().s(Customer.prefixedId(customerId)).build();
+    @Override
+    public CustomerWithOrders getCustomerAndRecentOrders(String customerId,
+                                                         int newestOrdersCount) {
+        AttributeValue customerPk = AttributeValue.builder().s(CustomerItem.prefixedId(customerId)).build();
         var queryRequest = QueryRequest.builder()
                 .tableName(tableName)
                 // Define aliases for the Attribute, '#pk' and the value, ':pk'
@@ -83,7 +93,8 @@ public class Repository {
         // The result is a list of items in DynamoDB JSON format
         List<Map<String, AttributeValue>> items = queryResponse.items();
 
-        var customerItemCollection = new CustomerItemCollection();
+        Customer customer = null;
+        List<Order> orders = new ArrayList<>();
 
         for (Map<String, AttributeValue> item : items) {
 
@@ -97,15 +108,14 @@ public class Repository {
             // Switch on the 'Type' and use the respective TableSchema
             // to marshall the DynamoDB JSON into the value class
             switch (type.s()) {
-                case Customer.CUSTOMER_TYPE:
-                    Customer customer =
+                case CustomerItem.CUSTOMER_TYPE:
+                    CustomerItem customerItem =
                             customerTableSchema.mapToItem(item);
-                    customerItemCollection.setCustomer(customer);
+                    customer = mapper.mapFromItem(customerItem);
                     break;
-                case Order.ORDER_TYPE:
-                    Order order =
-                            orderTableSchema.mapToItem(item);
-                    customerItemCollection.addOrder(order);
+                case OrderItem.ORDER_TYPE:
+                    OrderItem orderItem = orderTableSchema.mapToItem(item);
+                    orders.add(mapper.mapFromItem(orderItem));
                     break;
                 default:
                     throw new DynamoDbInvalidEntityException(String.format("Found unhandled Type=%s on Item with attributes: %s", type.s(), item));
@@ -113,42 +123,48 @@ public class Repository {
 
         }
 
-        return customerItemCollection;
+        return new CustomerWithOrders(customer, orders);
     }
 
+    @Override
     public void insertCustomer(Customer customer) {
         log.info("Inserting customer: {}}", customer);
-        this.customerTable.putItem(customer);
+        this.customerTable.putItem(mapper.mapToItem(customer));
     }
 
+    @Override
     public void insertCustomerDoNotOverwrite(Customer customer) {
+        CustomerItem customerItem = mapper.mapToItem(customer);
         var expression = Expression.builder()
                 .expression("attribute_not_exists(PK)")
                 .build();
-        var putItemEnhancedRequest = PutItemEnhancedRequest.builder(Customer.class)
-                .item(customer)
+        var putItemEnhancedRequest = PutItemEnhancedRequest.builder(CustomerItem.class)
+                .item(customerItem)
                 .conditionExpression(expression)
                 .build();
         try {
             this.customerTable.putItem(putItemEnhancedRequest);
         } catch (ConditionalCheckFailedException e) {
-            throw new DynamoDbEntityAlreadyExistsException("Attempted to overwrite an item which already exists with PK=" + customer.getPartitionKey());
+            throw new DynamoDbEntityAlreadyExistsException("Attempted to overwrite an item which already exists with PK=" + customerItem.getPartitionKey());
         }
     }
 
+    @Override
     public void insertOrder(Order order) {
         log.info("Inserting order: {}", order);
-        this.orderTable.putItem(order);
+        this.orderTable.putItem(mapper.mapToItem(order));
     }
 
+    @Override
     public Customer getCustomerById(String id) {
-        var key = Key.builder().partitionValue(Customer.prefixedId(id)).sortValue(Customer.A_RECORD).build();
-        return this.customerTable.getItem(key);
+        var key = Key.builder().partitionValue(CustomerItem.prefixedId(id)).sortValue(CustomerItem.A_RECORD).build();
+        return mapper.mapFromItem(this.customerTable.getItem(key));
     }
 
+    @Override
     public Map<String, AttributeValue> getCustomerByIdDynamoDbJson(String id) {
-        var pk = AttributeValue.builder().s(Customer.prefixedId(id)).build();
-        var sk = AttributeValue.builder().s(Customer.A_RECORD).build();
+        var pk = AttributeValue.builder().s(CustomerItem.prefixedId(id)).build();
+        var sk = AttributeValue.builder().s(CustomerItem.A_RECORD).build();
         var getItemRequest = GetItemRequest.builder()
                 .tableName("java-sdk-v2")
                 .key(Map.of("PK", pk, "SK", sk))
@@ -157,6 +173,7 @@ public class Repository {
         return item.item();
     }
 
+    @Override
     public void deleteAllItems() {
         var scanRequest = ScanRequest.builder()
                 .tableName(tableName)

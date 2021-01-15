@@ -52,3 +52,9 @@ See example of testing with this in the AWS SDK
 ### Point AWS CLI to DynamoDB Local
 `AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables --endpoint-url http://localhost:8000`
 
+## Repository Layer Isolation
+
+Note: The entities in `com.davidagood.awssdkv2.dynamodb.repository` 
+should really not be public. But making them non-public isn't supported 
+by DynamoDB Enhanced Client when using annotations. Instead we would have 
+to fall back to manually wiring the schema.

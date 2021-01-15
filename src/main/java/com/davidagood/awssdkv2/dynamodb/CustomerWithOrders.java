@@ -3,13 +3,15 @@ package com.davidagood.awssdkv2.dynamodb;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
-public class Order {
+public class CustomerWithOrders {
 
     @NonNull
-    String id;
+    Customer customer;
 
     @NonNull
-    String customerId;
+    List<Order> orders;
 
 }
