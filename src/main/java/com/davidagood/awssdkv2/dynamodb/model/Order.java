@@ -1,4 +1,4 @@
-package com.davidagood.awssdkv2.dynamodb;
+package com.davidagood.awssdkv2.dynamodb.model;
 
 import lombok.NonNull;
 import lombok.Value;

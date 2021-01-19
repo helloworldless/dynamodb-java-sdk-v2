@@ -1,5 +1,7 @@
 package com.davidagood.awssdkv2.dynamodb;
 
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
+import com.davidagood.awssdkv2.dynamodb.model.Order;
 import lombok.NonNull;
 import lombok.Value;
 

@@ -1,7 +1,7 @@
 package com.davidagood.awssdkv2.dynamodb.repository;
 
-import com.davidagood.awssdkv2.dynamodb.Customer;
-import com.davidagood.awssdkv2.dynamodb.Order;
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
+import com.davidagood.awssdkv2.dynamodb.model.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
