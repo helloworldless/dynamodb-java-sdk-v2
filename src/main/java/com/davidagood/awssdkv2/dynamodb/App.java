@@ -1,5 +1,7 @@
 package com.davidagood.awssdkv2.dynamodb;
 
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
+import com.davidagood.awssdkv2.dynamodb.model.Order;
 import com.davidagood.awssdkv2.dynamodb.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

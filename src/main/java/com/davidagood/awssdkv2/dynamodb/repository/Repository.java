@@ -1,8 +1,8 @@
 package com.davidagood.awssdkv2.dynamodb.repository;
 
-import com.davidagood.awssdkv2.dynamodb.Customer;
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.CustomerWithOrders;
-import com.davidagood.awssdkv2.dynamodb.Order;
+import com.davidagood.awssdkv2.dynamodb.model.Order;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -23,8 +23,6 @@ public interface Repository {
                                                   int newestOrdersCount);
 
     void insertCustomer(Customer customer);
-
-    void insertCustomerDoNotOverwrite(Customer customer);
 
     void insertOrder(Order order);
 

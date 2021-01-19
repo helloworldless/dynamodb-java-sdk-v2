@@ -1,10 +1,8 @@
 package com.davidagood.awssdkv2.dynamodb.repository;
 
-import com.davidagood.awssdkv2.dynamodb.Customer;
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.CustomerWithOrders;
-import com.davidagood.awssdkv2.dynamodb.DynamoDbEntityAlreadyExistsException;
-import com.davidagood.awssdkv2.dynamodb.DynamoDbInvalidEntityException;
-import com.davidagood.awssdkv2.dynamodb.Order;
+import com.davidagood.awssdkv2.dynamodb.model.Order;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,12 +126,7 @@ class DynamoDbRepository implements Repository {
 
     @Override
     public void insertCustomer(Customer customer) {
-        log.info("Inserting customer: {}}", customer);
-        this.customerTable.putItem(mapper.mapToItem(customer));
-    }
-
-    @Override
-    public void insertCustomerDoNotOverwrite(Customer customer) {
+        log.info("Inserting customer: {}", customer);
         CustomerItem customerItem = mapper.mapToItem(customer);
         var expression = Expression.builder()
                 .expression("attribute_not_exists(PK)")
