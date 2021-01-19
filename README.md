@@ -15,11 +15,33 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 
 ## Where To Begin
 
-[App.java](https://github.com/helloworldless/dynamodb-java-sdk-v2/blob/master/src/main/java/com/davidagood/awssdkv2/dynamodb/App.java)
+`src/main/java/com/davidagood/awssdkv2/dynamodb/App.java`
 
 ## Blog Posts Referencing This Repo
 
 - [Working with Heterogeneous Item Collections in the DynamoDB Enhanced Client for Java](https://davidagood.com/dynamodb-enhanced-client-java-heterogeneous-item-collections/)
+- [DynamoDB Enhanced Client for Java: Missing Setters Cause Misleading Error or Unexpected Behavior](https://davidagood.com/dynamodb-enhanced-client-java-missing-setters/)
+
+## Features
+
+### Repository Layer Isolation
+
+- The `Repository` interface is public and is implemented by the package-private `DynamoDbRepository`
+- The `Repository` is defined in terms of database-agnostic value classes such that the underlying 
+  database technology can be changed with little to no impact outside the 
+  repository layer and `repository` package
+- The `DynamoDbRepository` uses [MapStruct](https://mapstruct.org/) to effortlessly convert the database-agnostic 
+  value classes into DynamoDB entities (`@DynamoDbBean`)
+- The DynamoDB entities (`@DynamoDbBean`) also live inside the `repository` package. 
+  They are public but should ideally be package-private. However, making them non-public 
+  would require switching to manually wiring the schema as opposed to using the 
+  annotation-driven schema capability.
+
+### Integration Testing with DynamoDB Local
+
+Some ideas are taken from the AWS SDK:
+[here](https://github.com/aws/aws-sdk-java-v2/blob/93269d4c0416d0f72e086774265847d6af0d54ec/services-custom/dynamodb-enhanced/src/test/java/software/amazon/awssdk/extensions/dynamodb/mappingclient/functionaltests/LocalDynamoDb.java).
+
 
 ## TODO
 
@@ -44,17 +66,10 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 - Immutable without Lombok
 - Encapsulated with MapStruct (DynamoDb Immutables not even necessary then?)
 
-## DynamoDB Local
+## Point AWS CLI to DynamoDB Local
 
-See example of testing with this in the AWS SDK 
-[here](https://github.com/aws/aws-sdk-java-v2/blob/93269d4c0416d0f72e086774265847d6af0d54ec/services-custom/dynamodb-enhanced/src/test/java/software/amazon/awssdk/extensions/dynamodb/mappingclient/functionaltests/LocalDynamoDb.java)
+It may be occasionally useful to use the AWS CLI for troubleshooting while using DynamoDB Local. 
+Here's an example of how to do that: 
 
-### Point AWS CLI to DynamoDB Local
-`AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables --endpoint-url http://localhost:8000`
-
-## Repository Layer Isolation
-
-Note: The entities in `com.davidagood.awssdkv2.dynamodb.repository` 
-should really not be public. But making them non-public isn't supported 
-by DynamoDB Enhanced Client when using annotations. Instead we would have 
-to fall back to manually wiring the schema.
+`AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables 
+--endpoint-url http://localhost:8000`
