@@ -21,21 +21,13 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 
 - [Working with Heterogeneous Item Collections in the DynamoDB Enhanced Client for Java](https://davidagood.com/dynamodb-enhanced-client-java-heterogeneous-item-collections/)
 - [DynamoDB Enhanced Client for Java: Missing Setters Cause Misleading Error or Unexpected Behavior](https://davidagood.com/dynamodb-enhanced-client-java-missing-setters/)
+- [DynamoDB Repository Layer Isolation in Java](https://davidagood.com/dynamodb-repository-layer-isolation-in-java/)
 
 ## Features
 
 ### Repository Layer Isolation
 
-- The `Repository` interface is public and is implemented by the package-private `DynamoDbRepository`
-- The `Repository` is defined in terms of database-agnostic value classes such that the underlying 
-  database technology can be changed with little to no impact outside the 
-  repository layer and `repository` package
-- The `DynamoDbRepository` uses [MapStruct](https://mapstruct.org/) to effortlessly convert the database-agnostic 
-  value classes into DynamoDB entities (`@DynamoDbBean`)
-- The DynamoDB entities (`@DynamoDbBean`) also live inside the `repository` package. 
-  They are public but should ideally be package-private. However, making them non-public 
-  would require switching to manually wiring the schema as opposed to using the 
-  annotation-driven schema capability.
+See here: [DynamoDB Repository Layer Isolation in Java](https://davidagood.com/dynamodb-repository-layer-isolation-in-java/)
 
 ### Integration Testing with DynamoDB Local
 
