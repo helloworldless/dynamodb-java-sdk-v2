@@ -1,4 +1,4 @@
-package com.davidagood.awssdkv2.dynamodb;
+package com.davidagood.awssdkv2.dynamodb.repository;
 
 import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
 import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;

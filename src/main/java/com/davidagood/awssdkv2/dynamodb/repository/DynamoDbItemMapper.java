@@ -2,6 +2,7 @@ package com.davidagood.awssdkv2.dynamodb.repository;
 
 import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.model.Order;
+import com.davidagood.awssdkv2.dynamodb.model.Photo;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -14,5 +15,11 @@ public interface DynamoDbItemMapper {
 
     Order mapFromItem(OrderItem orderItem);
     OrderItem mapToItem(Order order);
+
+    Photo mapFromItem(PhotoItem photoItem);
+    PhotoItem mapToItem(Photo photo);
+
+    PhotoItem.Metadata mapToItem(Photo.Metadata metadata);
+    Photo.Metadata mapFromItem(PhotoItem.Metadata metadata);
 
 }

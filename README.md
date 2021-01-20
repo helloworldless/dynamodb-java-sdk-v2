@@ -63,5 +63,4 @@ Some ideas are taken from the AWS SDK:
 It may be occasionally useful to use the AWS CLI for troubleshooting while using DynamoDB Local. 
 Here's an example of how to do that: 
 
-`AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables 
---endpoint-url http://localhost:8000`
+`AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables --endpoint-url http://localhost:8000`

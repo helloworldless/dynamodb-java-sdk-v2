@@ -1,4 +1,4 @@
-package com.davidagood.awssdkv2.dynamodb;
+package com.davidagood.awssdkv2.dynamodb.repository;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 

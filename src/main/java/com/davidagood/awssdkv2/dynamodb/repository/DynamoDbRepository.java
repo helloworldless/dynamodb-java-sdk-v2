@@ -1,8 +1,10 @@
 package com.davidagood.awssdkv2.dynamodb.repository;
 
-import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.CustomerWithOrders;
+import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.model.Order;
+import com.davidagood.awssdkv2.dynamodb.model.Photo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.isNull;
 
@@ -40,30 +43,27 @@ class DynamoDbRepository implements Repository {
     private final DynamoDbItemMapper mapper = DynamoDbItemMapper.INSTANCE;
 
     private final TableSchema<CustomerItem> customerTableSchema;
-
-    @Override
-    @VisibleForTesting
-    public DynamoDbTable<CustomerItem> getCustomerTable() {
-        return customerTable;
-    }
-
     private final DynamoDbTable<CustomerItem> customerTable;
 
     private final TableSchema<OrderItem> orderTableSchema;
     private final DynamoDbTable<OrderItem> orderTable;
 
-    DynamoDbRepository(DynamoDbClient dynamoDbClient, String tableName) {
+    private final DynamoDbTable<PhotoItem> photoTable;
+
+    DynamoDbRepository(DynamoDbClient dynamoDbClient, String tableName, ObjectMapper objectMapper) {
         this.dynamoDbClient = dynamoDbClient;
         this.tableName = tableName;
         this.dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(dynamoDbClient)
-                .build();
+            .dynamoDbClient(dynamoDbClient)
+            .build();
 
         this.customerTableSchema = TableSchema.fromClass(CustomerItem.class);
         this.customerTable = dynamoDbEnhancedClient.table(tableName, customerTableSchema);
 
         this.orderTableSchema = TableSchema.fromClass(OrderItem.class);
         this.orderTable = dynamoDbEnhancedClient.table(tableName, orderTableSchema);
+
+        this.photoTable = dynamoDbEnhancedClient.table(tableName, PhotoItem.schema(objectMapper));
     }
 
     @Override
@@ -71,18 +71,18 @@ class DynamoDbRepository implements Repository {
                                                          int newestOrdersCount) {
         AttributeValue customerPk = AttributeValue.builder().s(CustomerItem.prefixedId(customerId)).build();
         var queryRequest = QueryRequest.builder()
-                .tableName(tableName)
-                // Define aliases for the Attribute, '#pk' and the value, ':pk'
-                .keyConditionExpression("#pk = :pk")
-                // '#pk' refers to the Attribute 'PK'
-                .expressionAttributeNames(Map.of("#pk", "PK"))
-                // ':pk' refers to the customer PK of interest
-                .expressionAttributeValues(Map.of(":pk", customerPk))
-                // Search from "bottom to top"
-                .scanIndexForward(false)
-                // One customer, plus N newest orders
-                .limit(1 + newestOrdersCount)
-                .build();
+            .tableName(tableName)
+            // Define aliases for the Attribute, '#pk' and the value, ':pk'
+            .keyConditionExpression("#pk = :pk")
+            // '#pk' refers to the Attribute 'PK'
+            .expressionAttributeNames(Map.of("#pk", "PK"))
+            // ':pk' refers to the customer PK of interest
+            .expressionAttributeValues(Map.of(":pk", customerPk))
+            // Search from "bottom to top"
+            .scanIndexForward(false)
+            // One customer, plus N newest orders
+            .limit(1 + newestOrdersCount)
+            .build();
 
         // Use the DynamoDbClient directly rather than the
         // DynamoDbEnhancedClient or DynamoDbTable
@@ -108,7 +108,7 @@ class DynamoDbRepository implements Repository {
             switch (type.s()) {
                 case CustomerItem.CUSTOMER_TYPE:
                     CustomerItem customerItem =
-                            customerTableSchema.mapToItem(item);
+                        customerTableSchema.mapToItem(item);
                     customer = mapper.mapFromItem(customerItem);
                     break;
                 case OrderItem.ORDER_TYPE:
@@ -129,12 +129,12 @@ class DynamoDbRepository implements Repository {
         log.info("Inserting customer: {}", customer);
         CustomerItem customerItem = mapper.mapToItem(customer);
         var expression = Expression.builder()
-                .expression("attribute_not_exists(PK)")
-                .build();
+            .expression("attribute_not_exists(PK)")
+            .build();
         var putItemEnhancedRequest = PutItemEnhancedRequest.builder(CustomerItem.class)
-                .item(customerItem)
-                .conditionExpression(expression)
-                .build();
+            .item(customerItem)
+            .conditionExpression(expression)
+            .build();
         try {
             this.customerTable.putItem(putItemEnhancedRequest);
         } catch (ConditionalCheckFailedException e) {
@@ -155,33 +155,55 @@ class DynamoDbRepository implements Repository {
     }
 
     @Override
-    public Map<String, AttributeValue> getCustomerByIdDynamoDbJson(String id) {
-        var pk = AttributeValue.builder().s(CustomerItem.prefixedId(id)).build();
-        var sk = AttributeValue.builder().s(CustomerItem.A_RECORD).build();
-        var getItemRequest = GetItemRequest.builder()
-                .tableName("java-sdk-v2")
-                .key(Map.of("PK", pk, "SK", sk))
-                .build();
-        GetItemResponse item = dynamoDbClient.getItem(getItemRequest);
-        return item.item();
+    public void insertPhoto(Photo photo) {
+        PhotoItem photoItem = mapper.mapToItem(photo);
+        photoTable.putItem(photoItem);
+    }
+
+    @Override
+    public Optional<Photo> findPhoto(String photoId) {
+        PhotoItem photoItem = photoTable.getItem(Key.builder().partitionValue(photoId).build());
+        return Optional.ofNullable(photoItem).map(mapper::mapFromItem);
     }
 
     @Override
     public void deleteAllItems() {
         var scanRequest = ScanRequest.builder()
-                .tableName(tableName)
-                .attributesToGet("PK", "SK")
-                .build();
+            .tableName(tableName)
+            .attributesToGet("PK", "SK")
+            .build();
         // Note: Normally, full-table scans should be avoided in DynamoDB
         ScanResponse scanResponse = dynamoDbClient.scan(scanRequest);
         for (Map<String, AttributeValue> item : scanResponse.items()) {
             var deleteItemRequest = DeleteItemRequest.builder()
-                    .tableName(tableName)
-                    .key(Map.of("PK", item.get("PK"), "SK", item.get("SK")))
-                    .build();
+                .tableName(tableName)
+                .key(Map.of("PK", item.get("PK"), "SK", item.get("SK")))
+                .build();
             DeleteItemResponse deleteItemResponse = dynamoDbClient.deleteItem(deleteItemRequest);
             log.info("DeleteItemResponse: {}", deleteItemResponse);
         }
+    }
+
+    @VisibleForTesting
+    Map<String, AttributeValue> getCustomerByIdDynamoDbJson(String id) {
+        var pk = AttributeValue.builder().s(CustomerItem.prefixedId(id)).build();
+        var sk = AttributeValue.builder().s(CustomerItem.A_RECORD).build();
+        var getItemRequest = GetItemRequest.builder()
+            .tableName(tableName)
+            .key(Map.of("PK", pk, "SK", sk))
+            .build();
+        GetItemResponse item = dynamoDbClient.getItem(getItemRequest);
+        return item.item();
+    }
+
+    @VisibleForTesting
+    DynamoDbTable<CustomerItem> getCustomerTable() {
+        return this.customerTable;
+    }
+
+    @VisibleForTesting
+    DynamoDbTable<PhotoItem> getPhotoTable() {
+        return this.photoTable;
     }
 
 }

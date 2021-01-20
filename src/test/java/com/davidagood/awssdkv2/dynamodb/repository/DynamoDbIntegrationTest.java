@@ -2,34 +2,37 @@ package com.davidagood.awssdkv2.dynamodb.repository;
 
 
 import com.davidagood.awssdkv2.dynamodb.CustomerWithOrders;
-import com.davidagood.awssdkv2.dynamodb.LocalDynamoDbSyncTestBase;
 import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.model.Order;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.davidagood.awssdkv2.dynamodb.App.CUSTOMER_ID;
-import static com.davidagood.awssdkv2.dynamodb.App.TABLE_NAME;
+import static com.davidagood.awssdkv2.dynamodb.App.MAPPER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
 
-    Repository repository = new DynamoDbRepository(getDynamoDbClient(), getConcreteTableName(TABLE_NAME));
+    static final String tableName = "DynamoDbIntegrationTestTable";
+
+    DynamoDbRepository repository = new DynamoDbRepository(getDynamoDbClient(), getConcreteTableName(tableName), MAPPER);
 
     @BeforeEach
     void createTable() {
-        repository.getCustomerTable().createTable(r -> r.provisionedThroughput(getDefaultProvisionedThroughput()));
+        repository.getCustomerTable().createTable();
     }
 
     @AfterEach
     void deleteTable() {
         getDynamoDbClient().deleteTable(DeleteTableRequest.builder()
-            .tableName(getConcreteTableName(TABLE_NAME))
+            .tableName(getConcreteTableName(tableName))
             .build());
     }
 
@@ -66,6 +69,22 @@ class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
 
         assertThat(repository.getCustomerAndRecentOrders(customerId, 1))
             .isEqualTo(new CustomerWithOrders(customer, List.of(order2)));
+    }
+
+    @Test
+    void customerAsDynamoDbJsonTest() {
+        String customerId = CUSTOMER_ID;
+        Customer customer = new Customer(customerId);
+        repository.insertCustomer(customer);
+
+        Map<String, AttributeValue> expected = Map.of(
+            "PK", AttributeValue.builder().s(CustomerItem.prefixedId(customerId)).build(),
+            "SK", AttributeValue.builder().s(CustomerItem.A_RECORD).build(),
+            "CustomerId", AttributeValue.builder().s(customerId).build(),
+            "Type", AttributeValue.builder().s(CustomerItem.CUSTOMER_TYPE).build()
+        );
+
+        assertThat(repository.getCustomerByIdDynamoDbJson(CUSTOMER_ID)).isEqualTo(expected);
     }
 
 }
