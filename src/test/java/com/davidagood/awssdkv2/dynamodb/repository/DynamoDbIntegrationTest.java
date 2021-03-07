@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
 
-    static final String tableName = "DynamoDbIntegrationTestTable";
+    static final String TABLE_NAME = "DynamoDbIntegrationTestTable";
 
-    DynamoDbRepository repository = new DynamoDbRepository(getDynamoDbClient(), getConcreteTableName(tableName), MAPPER);
+    DynamoDbRepository repository = new DynamoDbRepository(getDynamoDbClient(), getConcreteTableName(TABLE_NAME), MAPPER);
 
     @BeforeEach
     void createTable() {
@@ -32,7 +32,7 @@ class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
     @AfterEach
     void deleteTable() {
         getDynamoDbClient().deleteTable(DeleteTableRequest.builder()
-            .tableName(getConcreteTableName(tableName))
+            .tableName(getConcreteTableName(TABLE_NAME))
             .build());
     }
 
