@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.davidagood.awssdkv2.dynamodb.repository.DynamoDbTestUtil.createTableRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DynamoDbBeanlessRepositoryTest extends LocalDynamoDbSyncTestBase {
@@ -23,16 +24,7 @@ class DynamoDbBeanlessRepositoryTest extends LocalDynamoDbSyncTestBase {
 
     @BeforeEach
     void createTable() {
-        var pk = KeySchemaElement.builder().attributeName("PK").keyType(KeyType.HASH).build();
-        var pkDef = AttributeDefinition.builder().attributeName("PK").attributeType(ScalarAttributeType.S).build();
-        var sk = KeySchemaElement.builder().attributeName("SK").keyType(KeyType.RANGE).build();
-        var skDef = AttributeDefinition.builder().attributeName("SK").attributeType(ScalarAttributeType.S).build();
-        CreateTableRequest request = CreateTableRequest.builder()
-            .tableName(getConcreteTableName(TABLE_NAME))
-            .keySchema(pk, sk)
-            .attributeDefinitions(pkDef, skDef)
-            .billingMode(BillingMode.PAY_PER_REQUEST)
-            .build();
+        CreateTableRequest request = createTableRequest(getConcreteTableName(TABLE_NAME));
         getDynamoDbClient().createTable(request);
     }
 
