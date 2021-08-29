@@ -67,8 +67,10 @@ Some ideas are taken from the AWS SDK:
 
 ### Enhanced Client using Static Schema
 
-Build table schema manually, as opposed to using annotations. 
-See [here](https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#initialization)
+Build table schema manually, as opposed to using annotations. See here: 
+`com.davidagood.awssdkv2.dynamodb.repository.StaticSchemaImmutableItem`
+
+This is described in the official docs [here](https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#initialization).
 
 ### Create Table If Not Exists
 

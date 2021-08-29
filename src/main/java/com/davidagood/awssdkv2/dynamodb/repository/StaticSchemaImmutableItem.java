@@ -40,14 +40,50 @@ public class StaticSchemaImmutableItem {
     }
 
     public static TableSchema<StaticSchemaImmutableItem> schema() {
-        var pk = immutableAttribute().addTag(primaryPartitionKey()).name("PK").getter(StaticSchemaImmutableItem::getPk).setter(NO_OP).build();
-        var sk = immutableAttribute().addTag(primarySortKey()).name("SK").getter(StaticSchemaImmutableItem::getSk).setter(NO_OP).build();
-        var id = immutableAttribute().name("Id").getter(StaticSchemaImmutableItem::getId).setter(StaticSchemaImmutableItemBuilder::id).build();
-        var type = immutableAttribute().name("Type").getter(StaticSchemaImmutableItem::getType).setter(NO_OP).build();
-        var message = immutableAttribute().name("Message").getter(StaticSchemaImmutableItem::getMessage).setter(StaticSchemaImmutableItemBuilder::message).build();
         return TableSchema.builder(StaticSchemaImmutableItem.class, StaticSchemaImmutableItem.StaticSchemaImmutableItemBuilder.class)
             .newItemBuilder(StaticSchemaImmutableItem::builder, StaticSchemaImmutableItem.StaticSchemaImmutableItemBuilder::build)
-            .attributes(pk, sk, type, id, message)
+            .attributes(createPk(), createSk(), createId(), createType(), createMessage())
+            .build();
+    }
+
+    static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createPk() {
+        return immutableAttribute()
+            .addTag(primaryPartitionKey())
+            .name("PK").getter(StaticSchemaImmutableItem::getPk)
+            .setter(NO_OP)
+            .build();
+    }
+
+    static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createSk() {
+        return immutableAttribute()
+            .addTag(primarySortKey())
+            .name("SK")
+            .getter(StaticSchemaImmutableItem::getSk)
+            .setter(NO_OP)
+            .build();
+    }
+
+    static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createId() {
+        return immutableAttribute()
+            .name("Id")
+            .getter(StaticSchemaImmutableItem::getId)
+            .setter(StaticSchemaImmutableItemBuilder::id)
+            .build();
+    }
+
+    static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createType() {
+        return immutableAttribute()
+            .name("Type")
+            .getter(StaticSchemaImmutableItem::getType)
+            .setter(NO_OP)
+            .build();
+    }
+
+    static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createMessage() {
+        return immutableAttribute()
+            .name("Message")
+            .getter(StaticSchemaImmutableItem::getMessage)
+            .setter(StaticSchemaImmutableItemBuilder::message)
             .build();
     }
 
