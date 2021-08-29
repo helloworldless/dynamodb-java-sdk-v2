@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DynamoDbImmutableRepositoryTest extends LocalDynamoDbSyncTestBase {
+class DynamoDbImmutableRepositoryIT extends LocalDynamoDbSyncTestBase {
 
     static final String TABLE_NAME = "DynamoDbImmutableBeanTestTable";
 

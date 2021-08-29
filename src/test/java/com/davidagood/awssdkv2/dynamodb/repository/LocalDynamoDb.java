@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Source: https://github.com/aws/aws-sdk-java-v2/blob/86b05d40718cb9c4c020d141262e01d4408e22a9/services-custom/dynamodb-enhanced/src/test/java/software/amazon/awssdk/enhanced/dynamodb/functionaltests/LocalDynamoDb.java
  */
 class LocalDynamoDb {
+
     private DynamoDBProxyServer server;
     private int port;
 

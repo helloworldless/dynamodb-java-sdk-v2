@@ -8,8 +8,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.ImmutableAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Map;
@@ -31,6 +29,7 @@ public class StaticSchemaImmutableItem {
     @NonNull
     @Getter(onMethod_ = {@DynamoDbAttribute("Id")})
     String id;
+
     @NonNull
     @Getter(onMethod_ = {@DynamoDbAttribute("Message")})
     String message;
@@ -70,19 +69,14 @@ public class StaticSchemaImmutableItem {
             "SK", AttributeValue.builder().s(buildSortKey()).build());
     }
 
-    @DynamoDbPartitionKey
-    @DynamoDbAttribute("PK")
     public String getPk() {
         return buildPartitionKey(this.id);
     }
 
-    @DynamoDbSortKey
-    @DynamoDbAttribute("SK")
     public String getSk() {
         return buildSortKey();
     }
 
-    @DynamoDbAttribute("Type")
     public String getType() {
         return "StaticSchemaImmutableItem";
     }

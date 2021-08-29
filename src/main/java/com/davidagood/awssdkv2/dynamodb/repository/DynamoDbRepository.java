@@ -5,7 +5,6 @@ import com.davidagood.awssdkv2.dynamodb.model.Customer;
 import com.davidagood.awssdkv2.dynamodb.model.Order;
 import com.davidagood.awssdkv2.dynamodb.model.Photo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -15,14 +14,21 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
@@ -184,7 +190,37 @@ class DynamoDbRepository implements Repository {
         }
     }
 
-    @VisibleForTesting
+    static CreateTableRequest createTableRequest(String tableName) {
+        var pk = KeySchemaElement.builder().attributeName("PK").keyType(KeyType.HASH).build();
+        var pkDef = AttributeDefinition.builder().attributeName("PK").attributeType(ScalarAttributeType.S).build();
+        var sk = KeySchemaElement.builder().attributeName("SK").keyType(KeyType.RANGE).build();
+        var skDef = AttributeDefinition.builder().attributeName("SK").attributeType(ScalarAttributeType.S).build();
+        return CreateTableRequest.builder()
+            .tableName(tableName)
+            .keySchema(pk, sk)
+            .attributeDefinitions(pkDef, skDef)
+            .billingMode(BillingMode.PAY_PER_REQUEST)
+            .build();
+    }
+
+    public void createTableIfNotExists() {
+        if (tableExists(this.tableName)) {
+            log.info("Table={} already exists", this.tableName);
+        } else {
+            log.info("Creating table={}", this.tableName);
+            dynamoDbClient.createTable(createTableRequest(this.tableName));
+        }
+    }
+
+    boolean tableExists(String tableName) {
+        try {
+            dynamoDbClient.describeTable(r -> r.tableName(tableName));
+            return true;
+        } catch (ResourceNotFoundException e) {
+            return false;
+        }
+    }
+
     Map<String, AttributeValue> getCustomerByIdDynamoDbJson(String id) {
         var pk = AttributeValue.builder().s(CustomerItem.prefixedId(id)).build();
         var sk = AttributeValue.builder().s(CustomerItem.A_RECORD).build();
@@ -196,12 +232,10 @@ class DynamoDbRepository implements Repository {
         return item.item();
     }
 
-    @VisibleForTesting
     DynamoDbTable<CustomerItem> getCustomerTable() {
         return this.customerTable;
     }
 
-    @VisibleForTesting
     DynamoDbTable<PhotoItem> getPhotoTable() {
         return this.photoTable;
     }

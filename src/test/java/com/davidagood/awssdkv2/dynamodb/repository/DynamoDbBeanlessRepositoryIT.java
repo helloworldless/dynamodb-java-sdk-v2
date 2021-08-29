@@ -6,17 +6,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.davidagood.awssdkv2.dynamodb.repository.DynamoDbTestUtil.createTableRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DynamoDbBeanlessRepositoryTest extends LocalDynamoDbSyncTestBase {
+class DynamoDbBeanlessRepositoryIT extends LocalDynamoDbSyncTestBase {
 
     static final String TABLE_NAME = "DynamoDbBeanlessRepositoryTestTable";
 
@@ -24,7 +25,7 @@ class DynamoDbBeanlessRepositoryTest extends LocalDynamoDbSyncTestBase {
 
     @BeforeEach
     void createTable() {
-        CreateTableRequest request = createTableRequest(getConcreteTableName(TABLE_NAME));
+        CreateTableRequest request = DynamoDbRepository.createTableRequest(getConcreteTableName(TABLE_NAME));
         getDynamoDbClient().createTable(request);
     }
 

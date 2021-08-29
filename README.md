@@ -7,15 +7,43 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 
 ## Prerequisites
 
-- Have Java installed; This has been tested with Java 11 but previous versions may work
-- Have the AWS SDK installed and your profile configured
-  - We just construct the default client `DynamoDbClient.builder().build()` which expects to get everthing out of your AWS profile
-- Have a DynamoDB table by the name of `java-sdk-v2`, or you can change the `TABLE_NAME` property in `App.java`
-  - The schema should have a hash key named `PK` of type `String` and a sort key named `SK` of type `String`
+- Have Java installed; This has been tested with Java 11 but may work with other versions
 
-## Where To Begin
+### Connecting to DynamoDB
 
-`src/main/java/com/davidagood/awssdkv2/dynamodb/App.java`
+#### DynamoDB Local or LocalStack
+
+If you have Docker installed you can use 
+[DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) 
+or [LocalStack](https://localstack.cloud/) to start a locally running DynamoDB.
+
+To override the DynamoDB client to connect to the local instance, set the enviroment variable 
+`DYNAMODB_LOCAL_URL`.
+
+For example, here's the one-liner to run DynamoDB Local:
+
+```shell
+docker run -p 8000:8000 amazon/dynamodb-local
+```
+
+Once this is running you can run the example code with the environment variable 
+`DYNAMODB_LOCAL_URL=http://localhost:8000`.
+
+#### Connect to Live AWS DynamoDB
+
+- Have an AWS account
+- Have the AWS CLI installed and configured
+
+If the environment variable `DYNAMODB_LOCAL_URL` is not set, the default client expects 
+to get the credentials from the default credential provider chain, 
+same with the region.
+
+## Running The Code
+
+You can run one of these: 
+
+- `src/main/java/com/davidagood/awssdkv2/dynamodb/App.java`
+- `src/main/java/com/davidagood/awssdkv2/dynamodb/AppBasic.java`
 
 ## Blog Posts Referencing This Repo
 
@@ -34,14 +62,33 @@ See here: [DynamoDB Repository Layer Isolation in Java](https://davidagood.com/d
 Some ideas are taken from the AWS SDK:
 [here](https://github.com/aws/aws-sdk-java-v2/blob/93269d4c0416d0f72e086774265847d6af0d54ec/services-custom/dynamodb-enhanced/src/test/java/software/amazon/awssdk/extensions/dynamodb/mappingclient/functionaltests/LocalDynamoDb.java).
 
+### Enhanced Client using Static Schema
+
+Build table schema manually, as opposed to using annotations. 
+See [here](https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#initialization)
+
+### Create Table If Not Exists
+
+If the table does not exist, it is created at application startup time.
+
+See `com.davidagood.awssdkv2.dynamodb.repository.DynamoDbRepository.createTableIfNotExists`
+
+### Connect to Local DynamoDB
+
+See `com.davidagood.awssdkv2.dynamodb.App.buildDynamoDbClient`
+
+### Immutable Value Classes Using `@DynamoDbImmutable`
+
+See `com.davidagood.awssdkv2.dynamodb.repository.ImmutableBeanItem`.
+
+### Integration Testing with DynamoDB Local
+
+See all the tests ending in "IT", for example: 
+`src/test/java/com/davidagood/awssdkv2/dynamodb/repository/DynamoDbIT.java`
 
 ## TODO
 
-- Build table schema manually, i.e. without annotations
-  - See [here](https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#initialization)
-- Create table programmatically
 - Versioned attribute, https://github.com/aws/aws-sdk-java-v2/tree/master/services-custom/dynamodb-enhanced#versionedrecordextension
-- Immutable value classes using `@DynamoDbImmutable`
 - Integration testing with DynamoDBLocal
   - Test/demo features such as:
     - DynamoDbTable scan without filtering on type should fail when entity is marshalled, for example see Delivery#setType
@@ -49,7 +96,6 @@ Some ideas are taken from the AWS SDK:
 - Running DynamoDB locally via LocalStack
 - Versioning strategy shown here: https://youtu.be/HaEPXoXVf2k?t=2294
 - Pagination example
-- Versioning example
 
 ### Entities
 
@@ -64,34 +110,3 @@ It may be occasionally useful to use the AWS CLI for troubleshooting while using
 Here's an example of how to do that: 
 
 `AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws dynamodb list-tables --endpoint-url http://localhost:8000`
-
-## List
-
-aws dynamodb put-item --table-name python-test --item '{"PK": {"S": "List"}, "SK": {"S": "List"}, "Value": {"L": [{"S": "0"}]}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[0] = :value" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "00" }}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[10] = :value" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "1" }}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[-10] = :value" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "-10" }}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[5] = 5" --expression-attribute-names '{"#Value": "Value"}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[10] = :value, #Value[20] = :value2" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "first" }, ":value2": {"S": "second"}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[20] = :value, #Value[10] = :value2" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "first-2" }, ":value2": {"S": "second-2"}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value = list_append(#Value, :values)" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":values": {"L": [{"S": "list_appen"}, {"S": "123"}]}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value = list_append(:values, #Value)" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":values": {"L": [{"S": "-1"}]}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[0] = if_not_exists(#Value[0], :value)" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "overwrite-0" }}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "List"}, "SK": {"S": "List"}}' --update-expression "SET #Value[100] = if_not_exists(#Value[1000], :value)" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":value": {"S": "overwrite-?" }}'
-
-
-## Set
-
-aws dynamodb put-item --table-name python-test --item '{"PK": {"S": "SET"}, "SK": {"S": "SET"}, "Value": {"SS": ["0"]}}'
-
-aws dynamodb update-item --table-name python-test --key '{"PK": {"S": "SET"}, "SK": {"S": "SET"}}' --update-expression "SET #Value = list_append(#Value, ":values")" --expression-attribute-names '{"#Value": "Value"}' --expression-attribute-values '{":values": {"SS": ["1"]}}'

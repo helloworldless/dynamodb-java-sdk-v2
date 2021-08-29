@@ -11,10 +11,9 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.davidagood.awssdkv2.dynamodb.repository.DynamoDbTestUtil.createTableRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DynamoDbListRepositoryTest extends LocalDynamoDbSyncTestBase {
+class DynamoDbListRepositoryIT extends LocalDynamoDbSyncTestBase {
 
     static final String TABLE_NAME = "DynamoDbListRepositoryTestTable";
 
@@ -22,7 +21,7 @@ class DynamoDbListRepositoryTest extends LocalDynamoDbSyncTestBase {
 
     @BeforeEach
     void createTable() {
-        CreateTableRequest request = createTableRequest(getConcreteTableName(TABLE_NAME));
+        CreateTableRequest request = DynamoDbRepository.createTableRequest(getConcreteTableName(TABLE_NAME));
         getDynamoDbClient().createTable(request);
     }
 

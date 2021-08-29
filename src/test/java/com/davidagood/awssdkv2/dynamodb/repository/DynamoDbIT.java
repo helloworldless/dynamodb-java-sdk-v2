@@ -18,7 +18,7 @@ import static com.davidagood.awssdkv2.dynamodb.App.MAPPER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class DynamoDbIntegrationTest extends LocalDynamoDbSyncTestBase {
+class DynamoDbIT extends LocalDynamoDbSyncTestBase {
 
     static final String TABLE_NAME = "DynamoDbIntegrationTestTable";
 

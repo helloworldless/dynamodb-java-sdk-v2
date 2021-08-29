@@ -17,7 +17,7 @@ public class LocalDynamoDbTestBase {
                     .writeCapacityUnits(50L)
                     .build();
 
-    private String uniqueTableSuffix = UUID.randomUUID().toString();
+    private final String uniqueTableSuffix = UUID.randomUUID().toString();
 
     @BeforeAll
     public static void initializeLocalDynamoDb() {

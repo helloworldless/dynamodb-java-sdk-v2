@@ -6,33 +6,49 @@ import com.davidagood.awssdkv2.dynamodb.repository.Repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+import java.net.URI;
+
 public class App {
 
     public static final String CUSTOMER_ID = "123";
+
     public static final String TABLE_NAME = "java-sdk-v2";
-    private static final Logger log = LoggerFactory.getLogger(App.class);
-    private final Repository repository;
 
     public static final ObjectMapper MAPPER = new ObjectMapper()
         .registerModule(new JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    private static final Logger log = LoggerFactory.getLogger(App.class);
+
+    private final Repository repository;
 
     public App(Repository repository) {
         this.repository = repository;
     }
 
     public static void main(String[] args) {
-        var dynamoDbClient = DynamoDbClient.builder().build();
+        DynamoDbClient dynamoDbClient = buildDynamoDbClient();
         Repository repository = Repository.Factory.create(dynamoDbClient, TABLE_NAME, MAPPER);
         new App(repository).run();
     }
 
+    static DynamoDbClient buildDynamoDbClient() {
+        String dynamoDBLocalUrl = System.getenv("DYNAMODB_LOCAL_URL");
+        return Strings.isNullOrEmpty(dynamoDBLocalUrl)
+            ? DynamoDbClient.create()
+            : DynamoDbClient.builder().endpointOverride(URI.create(dynamoDBLocalUrl)).build();
+    }
+
     public void run() {
-        // this.repository.deleteAllItems();
+        this.repository.createTableIfNotExists();
+
+        // Start the table with a clean slate to avoid conflicts
+        this.repository.deleteAllItems();
 
         this.populateCustomer();
         this.populateOrders();

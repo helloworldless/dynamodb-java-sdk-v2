@@ -31,4 +31,6 @@ public interface Repository {
     Optional<Photo> findPhoto(String photoId);
 
     void deleteAllItems();
+
+    void createTableIfNotExists();
 }

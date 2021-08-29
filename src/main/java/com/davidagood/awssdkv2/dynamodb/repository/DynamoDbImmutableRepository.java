@@ -63,7 +63,10 @@ public class DynamoDbImmutableRepository {
     }
 
     public Map<String, AttributeValue> getStaticSchemaImmutableItemRaw(String id) {
-        var request = GetItemRequest.builder().tableName(tableName).key(StaticSchemaImmutableItem.buildKeyMayForId(id)).build();
+        var request = GetItemRequest.builder()
+            .tableName(tableName)
+            .key(StaticSchemaImmutableItem.buildKeyMayForId(id))
+            .build();
         GetItemResponse response = dynamoDbClient.getItem(request);
         return response.item();
     }

@@ -6,8 +6,9 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import static com.davidagood.awssdkv2.dynamodb.App.TABLE_NAME;
 
 
 public class AppBasic {
@@ -15,15 +16,14 @@ public class AppBasic {
     private static final Logger log = LoggerFactory.getLogger(AppBasic.class);
 
     public static void main(String[] args) {
-        DynamoDbClient dynamoDbClient = DynamoDbClient.builder()
-                .region(Region.US_EAST_1)
-                .build();
+
+        DynamoDbClient dynamoDbClient = App.buildDynamoDbClient();
         DynamoDbEnhancedClient dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
                 .build();
 
         TableSchema<CustomerItem> customerTableSchema = TableSchema.fromClass(CustomerItem.class);
-        DynamoDbTable<CustomerItem> customerTable = dynamoDbEnhancedClient.table("java-sdk-v2", customerTableSchema);
+        DynamoDbTable<CustomerItem> customerTable = dynamoDbEnhancedClient.table(TABLE_NAME, customerTableSchema);
 
         CustomerItem customer = new CustomerItem();
         customer.setId("123");
