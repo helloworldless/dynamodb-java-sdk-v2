@@ -59,6 +59,9 @@ See here: [DynamoDB Repository Layer Isolation in Java](https://davidagood.com/d
 
 ### Integration Testing with DynamoDB Local
 
+See all the tests ending in "IT", for example:
+`src/test/java/com/davidagood/awssdkv2/dynamodb/repository/DynamoDbIT.java`
+
 Some ideas are taken from the AWS SDK:
 [here](https://github.com/aws/aws-sdk-java-v2/blob/93269d4c0416d0f72e086774265847d6af0d54ec/services-custom/dynamodb-enhanced/src/test/java/software/amazon/awssdk/extensions/dynamodb/mappingclient/functionaltests/LocalDynamoDb.java).
 
@@ -80,11 +83,6 @@ See `com.davidagood.awssdkv2.dynamodb.App.buildDynamoDbClient`
 ### Immutable Value Classes Using `@DynamoDbImmutable`
 
 See `com.davidagood.awssdkv2.dynamodb.repository.ImmutableBeanItem`.
-
-### Integration Testing with DynamoDB Local
-
-See all the tests ending in "IT", for example: 
-`src/test/java/com/davidagood/awssdkv2/dynamodb/repository/DynamoDbIT.java`
 
 ## TODO
 
