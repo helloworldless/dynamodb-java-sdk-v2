@@ -13,21 +13,7 @@ The various Java SDKs for DynamoDB are enumerated here: https://www.davidagood.c
 
 #### DynamoDB Local or LocalStack
 
-If you have Docker installed you can use 
-[DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) 
-or [LocalStack](https://localstack.cloud/) to start a locally running DynamoDB.
-
-To override the DynamoDB client to connect to the local instance, set the enviroment variable 
-`DYNAMODB_LOCAL_URL`.
-
-For example, here's the one-liner to run DynamoDB Local:
-
-```shell
-docker run -p 8000:8000 amazon/dynamodb-local
-```
-
-Once this is running you can run the example code with the environment variable 
-`DYNAMODB_LOCAL_URL=http://localhost:8000`.
+See **Connect to Local DynamoDB** under **Features**.
 
 #### Connect to Live AWS DynamoDB
 
@@ -79,6 +65,22 @@ If the table does not exist, it is created at application startup time.
 See `com.davidagood.awssdkv2.dynamodb.repository.DynamoDbRepository.createTableIfNotExists`
 
 ### Connect to Local DynamoDB
+
+If you have Docker installed you can use
+[DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
+or [LocalStack](https://localstack.cloud/) to start a locally running DynamoDB.
+
+To override the DynamoDB client to connect to the local instance, set the enviroment variable
+`DYNAMODB_LOCAL_URL`.
+
+For example, here's the one-liner to run DynamoDB Local:
+
+```shell
+docker run -p 8000:8000 amazon/dynamodb-local
+```
+
+Once this is running you can run the example code with the environment variable
+`DYNAMODB_LOCAL_URL=http://localhost:8000`.
 
 See `com.davidagood.awssdkv2.dynamodb.App.buildDynamoDbClient`
 
