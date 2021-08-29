@@ -49,7 +49,8 @@ public class StaticSchemaImmutableItem {
     static ImmutableAttribute<StaticSchemaImmutableItem, StaticSchemaImmutableItemBuilder, String> createPk() {
         return immutableAttribute()
             .addTag(primaryPartitionKey())
-            .name("PK").getter(StaticSchemaImmutableItem::getPk)
+            .name("PK")
+            .getter(StaticSchemaImmutableItem::getPk)
             .setter(NO_OP)
             .build();
     }
